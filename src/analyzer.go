@@ -1,10 +1,37 @@
 package ebert
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
+
+// OutputJSON writes the analysis results as JSON
+func (a *Analyzer) OutputJSON(analysis *Analysis, outputFile string) error {
+	jsonData, err := json.MarshalIndent(analysis, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal analysis to JSON: %w", err)
+	}
+
+	if outputFile != "" {
+		return os.WriteFile(outputFile, jsonData, 0644)
+	}
+
+	// Print to stdout if no file specified
+	fmt.Println(string(jsonData))
+	return nil
+}
+
+// GetAnalysisJSON returns the analysis as a JSON string
+func (a *Analyzer) GetAnalysisJSON(analysis *Analysis) (string, error) {
+	jsonData, err := json.MarshalIndent(analysis, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal analysis to JSON: %w", err)
+	}
+	return string(jsonData), nil
+}
 
 // Analyzer performs the security analysis
 type Analyzer struct {
@@ -106,14 +133,18 @@ func (a *Analyzer) calculateMetrics(user *GitHubUser, repos []GitHubRepo, events
 			metrics.PythonPackages++
 		}
 	}
-
 	// Analyze events (last 90 days)
 	for _, event := range events {
 		daysSinceEvent := now.Sub(event.CreatedAt).Hours() / 24
 		if daysSinceEvent <= 90 && event.Type == "PushEvent" {
-			metrics.RecentCommits += len(event.Payload.Commits)
+			// For public events API, we can't get exact commit count
+			// Each PushEvent represents at least one commit
+			metrics.RecentCommits += 1
 		}
 	}
+
+	//fmt.Printf("Total events: %d, PushEvents in last 90 days: %d, Total commits: %d\n",
+	//	totalEvents, pushEvents, metrics.RecentCommits)
 
 	return metrics
 }
@@ -298,7 +329,7 @@ func (a *Analyzer) generateFlags(user *GitHubUser, metrics Metrics, accountAge, 
 	return redFlags, warnings, positives
 }
 
-// CLI output functions
+// PrintAnalysis CLI output functions
 func PrintAnalysis(analysis *Analysis) {
 	fmt.Println("\n" + strings.Repeat("=", 80))
 	fmt.Println("  MCP SERVER SECURITY ANALYZER")

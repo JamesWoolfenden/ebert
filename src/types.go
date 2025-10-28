@@ -1,8 +1,15 @@
 package ebert
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // GitHub API structures
+
+// GitHubUser type
+//
+//goland:noinspection SpellCheckingInspection
 type GitHubUser struct {
 	Login           string    `json:"login"`
 	Name            string    `json:"name"`
@@ -20,17 +27,16 @@ type GitHubUser struct {
 	TwitterUsername string    `json:"twitter_username"`
 }
 
-type Metrics struct {
-	AccountAgeDays  int `json:"account_age_days"`
-	Repos           int `json:"repos"`
-	Stars           int `json:"stars"`
-	Forks           int `json:"forks"`
-	Followers       int `json:"followers"`
-	RecentCommits   int `json:"recent_commits"`
-	RecentlyUpdated int `json:"recently_updated"`
-	Archived        int `json:"archived"`
-	NPMPackages     int `json:"npm_packages"`
-	PythonPackages  int `json:"python_packages"`
+type Analysis struct {
+	User         GitHubUser  `json:"user"`
+	Scores       RiskScores  `json:"scores"`
+	OverallScore float64     `json:"overall_score"`
+	RiskLevel    string      `json:"risk_level"`
+	Metrics      Metrics     `json:"metrics"`
+	RedFlags     []string    `json:"red_flags"`
+	Warnings     []string    `json:"warnings"`
+	Positives    []string    `json:"positives"`
+	Timestamp    time.Time   `json:"timestamp"`
 }
 
 type RiskScores struct {
@@ -41,18 +47,20 @@ type RiskScores struct {
 	Community   float64 `json:"community"`
 }
 
-type Analysis struct {
-	User         GitHubUser `json:"user"`
-	Scores       RiskScores `json:"scores"`
-	OverallScore float64    `json:"overall_score"`
-	RiskLevel    string     `json:"risk_level"`
-	Metrics      Metrics    `json:"metrics"`
-	RedFlags     []string   `json:"red_flags"`
-	Warnings     []string   `json:"warnings"`
-	Positives    []string   `json:"positives"`
-	Timestamp    time.Time  `json:"timestamp"`
+type Metrics struct {
+	AccountAgeDays   int `json:"account_age_days"`
+	Repos            int `json:"repos"`
+	Stars            int `json:"stars"`
+	Forks            int `json:"forks"`
+	Followers        int `json:"followers"`
+	RecentCommits    int `json:"recent_commits"`
+	RecentlyUpdated  int `json:"recently_updated"`
+	Archived         int `json:"archived"`
+	NPMPackages      int `json:"npm_packages"`
+	PythonPackages   int `json:"python_packages"`
 }
 
+//goland:noinspection SpellCheckingInspection
 type GitHubRepo struct {
 	Name            string    `json:"name"`
 	FullName        string    `json:"full_name"`
@@ -71,7 +79,31 @@ type GitHubRepo struct {
 type GitHubEvent struct {
 	Type      string    `json:"type"`
 	CreatedAt time.Time `json:"created_at"`
-	Payload   struct {
-		Commits []interface{} `json:"commits"`
-	} `json:"payload"`
+	Repo      struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"repo"`
+	Actor struct {
+		Login string `json:"login"`
+	} `json:"actor"`
+	Payload json.RawMessage `json:"payload"` // Use RawMessage to handle different payload types
 }
+
+// After getting the analysis
+analysis, err := analyzer.Analyze(username)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Output as JSON to file
+err = analyzer.OutputJSON(analysis, "analysis.json")
+if err != nil {
+    log.Fatal(err)
+}
+
+// Or get as JSON string
+jsonString, err := analyzer.GetAnalysisJSON(analysis)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(jsonString)

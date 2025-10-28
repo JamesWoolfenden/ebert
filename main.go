@@ -24,7 +24,7 @@ func main() {
 	analyzer := ebert.NewAnalyzer(token)
 	analysis, err := analyzer.Analyze(username)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -34,13 +34,13 @@ func main() {
 	if len(os.Args) > 2 && os.Args[2] == "--json" {
 		jsonData, err := json.MarshalIndent(analysis, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
 			os.Exit(1)
 		}
 
 		filename := fmt.Sprintf("%s_analysis.json", username)
 		if err := os.WriteFile(filename, jsonData, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing JSON file: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "Error writing JSON file: %v\n", err)
 			os.Exit(1)
 		}
 
