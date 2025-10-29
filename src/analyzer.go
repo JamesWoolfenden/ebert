@@ -74,7 +74,7 @@ func (a *Analyzer) performAnalysis(user *GitHubUser, repos []GitHubRepo, events 
 	// Calculate risk scores
 	scores := RiskScores{
 		Identity:    a.calculateIdentityScore(user, accountAge),
-		Activity:    a.calculateActivityScore(metrics, accountAge, len(repos)),
+		Activity:    a.calculateActivityScore(metrics, len(repos)),
 		Quality:     a.calculateQualityScore(repos, metrics),
 		Maintenance: a.calculateMaintenanceScore(metrics, len(repos)),
 		Community:   a.calculateCommunityScore(metrics),
@@ -179,7 +179,7 @@ func (a *Analyzer) calculateIdentityScore(user *GitHubUser, accountAge int) floa
 	return clamp(score, 0, 100)
 }
 
-func (a *Analyzer) calculateActivityScore(metrics Metrics, accountAge, totalRepos int) float64 {
+func (a *Analyzer) calculateActivityScore(metrics Metrics, totalRepos int) float64 {
 	score := 50.0
 	commitsPerMonth := float64(metrics.RecentCommits) / 3.0
 

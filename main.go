@@ -18,17 +18,12 @@ func main() {
 	username := os.Args[1]
 	token := os.Getenv("GITHUB_TOKEN")
 
-	fmt.Printf("Analyzing GitHub user: %s\n", username)
-	fmt.Println("Fetching data from GitHub API...")
-
 	analyzer := ebert.NewAnalyzer(token)
 	analysis, err := analyzer.Analyze(username)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-
-	ebert.PrintAnalysis(analysis)
 
 	// Optionally save to JSON
 	if len(os.Args) > 2 && os.Args[2] == "--json" {
@@ -38,12 +33,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		filename := fmt.Sprintf("%s_analysis.json", username)
-		if err := os.WriteFile(filename, jsonData, 0644); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "Error writing JSON file: %v\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n💾 Analysis saved to: %s\n", filename)
+		fmt.Println(string(jsonData))
+	} else {
+		fmt.Printf("Analyzing GitHub user: %s\n", username)
+		fmt.Println("Fetching data from GitHub API...")
+		ebert.PrintAnalysis(analysis)
 	}
 }
